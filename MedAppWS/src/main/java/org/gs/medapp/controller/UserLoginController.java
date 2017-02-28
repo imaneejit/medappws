@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.gs.medapp.model.UserLogin;
+import org.gs.medapp.security.JwtAuthenticationToken;
 import org.gs.medapp.service.UserLoginService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -112,6 +113,19 @@ public class UserLoginController
 		_log.info("-----> creating user record result: " + httpStatus);
 		
 		return new ResponseEntity<Integer>( id, httpStatus );
+	}
+	
+	@PostMapping( "/users/authenticate" )
+	public ResponseEntity<JwtAuthenticationToken> authenticateUser( @RequestBody UserLogin user )
+	{
+		_log.info("-----> authenticating user: " + user.getUsername());
+		_log.info("-----> password: " + user.getPassword());
+		
+		JwtAuthenticationToken jwtToken = userLoginService.authenticate( user.getUsername(), user.getPassword() );
+		HttpStatus httpStatus = jwtToken == null ? HttpStatus.I_AM_A_TEAPOT : HttpStatus.OK;
+		
+		_log.info("-----> user authentication result: " + httpStatus);
+		return new ResponseEntity<JwtAuthenticationToken>( jwtToken, httpStatus );
 	}
 	
 	/**
