@@ -33,7 +33,7 @@ public class JwtAuthenticationFilter extends AbstractAuthenticationProcessingFil
 
 		if (header == null || !header.startsWith("Bearer ")) 
 		{
-			throw new JwtTokenMissingException("No JWT token found in request headers");
+			throw new JwtTokenMissingException("No JWT token found in request headers.");
 		}
 
 		String authToken = header.substring(7);

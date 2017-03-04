@@ -119,7 +119,6 @@ public class UserLoginController
 	public ResponseEntity<JwtAuthenticationToken> authenticateUser( @RequestBody UserLogin user )
 	{
 		_log.info("-----> authenticating user: " + user.getUsername());
-		_log.info("-----> password: " + user.getPassword());
 		
 		JwtAuthenticationToken jwtToken = userLoginService.authenticate( user.getUsername(), user.getPassword() );
 		HttpStatus httpStatus = jwtToken == null ? HttpStatus.I_AM_A_TEAPOT : HttpStatus.OK;

@@ -1,8 +1,12 @@
 package org.gs.medapp.security;
 
+import java.util.Calendar;
+import java.util.Properties;
+
 import org.apache.log4j.Logger;
+import org.gs.medapp.constants.Constants;
+import org.gs.medapp.helper.PropertiesHelper;
 import org.gs.medapp.model.UserLogin;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import io.jsonwebtoken.Claims;
@@ -16,8 +20,7 @@ public class JwtUtil
 	// logger
 	private final Logger _log = Logger.getLogger( JwtUtil.class );
 	
-	@Value("${jwt.secret}")
-	private String secret;
+	private Properties appProps = PropertiesHelper.getInstance().getProperties();
 	
 	/**
      * Tries to parse specified String as a JWT token. If successful, returns User object with username, id and role prefilled (extracted from token).
@@ -32,15 +35,34 @@ public class JwtUtil
 		
 		try 
 		{
+			String secret = appProps.getProperty(Constants._STR_JWT_SECRET);
 			Claims body = Jwts.parser()
 					.setSigningKey(secret)
 					.parseClaimsJws(token)
 					.getBody();
-	
-			user = new UserLogin();
-			user.setUsername( body.getSubject() );
-			user.setId((Integer) body.get("id"));
-			user.setRole((Integer) body.get("role"));
+			
+			Long expiration = (Long) body.get("expiration");
+			
+			if ( null == expiration )
+			{
+				_log.error("-----> Invalid JWT token.");
+			}
+			else
+			{
+				Long current = System.currentTimeMillis();
+				if ( current > expiration )
+				{
+					_log.error("-----> Invalid JWT token. Expired!");
+				}
+				else
+				{
+					user = new UserLogin();
+					user.setUsername( body.getSubject() );
+					user.setId((Integer) body.get("id"));
+					user.setRole((Integer) body.get("role"));
+					user.setUserDetails((Integer) body.get("userdetails"));
+				}
+			}
 		} 
 		catch (JwtException je) 
 		{
@@ -68,8 +90,19 @@ public class JwtUtil
 	public String generateToken( UserLogin user )
 	{
 		Claims claims = Jwts.claims().setSubject(user.getUsername());
-		claims.put("id", String.valueOf(user.getId()));
-		claims.put("role", String.valueOf(user.getRole()));
+		claims.put("id", user.getId());
+		claims.put("role", user.getRole());
+		claims.put("userdetails", user.getUserDetails());
+		
+		// add expiration in claims
+		Integer expirationHour = Integer.parseInt(appProps.getProperty(Constants._STR_JWT_EXPIRATION_HOUR));
+		
+		Calendar cal = Calendar.getInstance();
+		cal.add(Calendar.HOUR_OF_DAY, expirationHour);
+		
+		claims.put("expiration", cal.getTime().getTime());
+		
+		String secret = appProps.getProperty(Constants._STR_JWT_SECRET);
 		
 		return Jwts.builder()
 				.setClaims(claims)
