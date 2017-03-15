@@ -2,6 +2,7 @@ package org.gs.medapp.enums;
 
 public enum UserRole 
 {
+	ADMIN		(0),
 	DOCTOR		(1),
 	ASSISTANT	(2);
 	

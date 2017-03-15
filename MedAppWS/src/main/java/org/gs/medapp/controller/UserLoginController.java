@@ -3,8 +3,11 @@ package org.gs.medapp.controller;
 import java.util.List;
 
 import org.apache.log4j.Logger;
+import org.gs.medapp.dto.UserCreationDTO;
+import org.gs.medapp.model.UserDoctorDetail;
 import org.gs.medapp.model.UserLogin;
 import org.gs.medapp.security.JwtAuthenticationToken;
+import org.gs.medapp.service.UserDoctorDetailsService;
 import org.gs.medapp.service.UserLoginService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -26,6 +29,9 @@ public class UserLoginController
 	
 	@Autowired
 	private UserLoginService userLoginService;
+	
+	@Autowired
+	private UserDoctorDetailsService userDoctorDetailService;
 	
 	/**
 	 * request type: 	GET <br>
@@ -71,7 +77,7 @@ public class UserLoginController
 	
 	/**
 	 * request type:	GET <br>
-	 * request url: 	/users/{username} <br>
+	 * request url: 	/users/name?username={username}<br>
 	 * 
 	 * <br>
 	 * fetch user record by username
@@ -103,16 +109,55 @@ public class UserLoginController
 	 * @return 	id			generated id
 	 */
 	@PostMapping( "/users" )
-	public ResponseEntity<Integer> addUser( @RequestBody UserLogin user )
+	public ResponseEntity<String> addUser( @RequestBody UserCreationDTO userCreationDTO )
 	{
 		_log.info("-----> creating user record..");
+
+		String generatedPassword = null;
+		HttpStatus httpStatus = HttpStatus.OK;
 		
-		Integer id = userLoginService.createUser(user);
-		HttpStatus httpStatus = id == null ? HttpStatus.I_AM_A_TEAPOT : HttpStatus.OK;
+		UserLogin user = new UserLogin();
+		user.setUsername(userCreationDTO.getUsername());
+		user.setRole(userCreationDTO.getRole());
+		
+		// create user login record
+		userLoginService.createUser(user);
+		
+		if ( null != user.getId() )
+		{
+			if ( null != userCreationDTO.getNoOfAssistant() )
+			{
+				// create user doctor details
+				UserDoctorDetail userDoctorDetail = new UserDoctorDetail();
+				userDoctorDetail.setNoOfassistant(userCreationDTO.getNoOfAssistant());
+				userDoctorDetail.setUserLoginId(user.getId());
+				
+				Integer userDocDetailsId = userDoctorDetailService.addDoctorDetails(userDoctorDetail);
+				if ( null == userDocDetailsId )
+				{
+					_log.error("-----> There was an error creating the user doctor details record.");
+					httpStatus = HttpStatus.I_AM_A_TEAPOT;
+					userLoginService.deleteUser(user.getId());
+				}
+				else
+				{
+					generatedPassword = user.getPassword();
+				}
+			}
+			else
+			{
+				generatedPassword = user.getPassword();
+			}
+		}
+		else
+		{
+			_log.error("-----> There was an error creating the user login record.");
+			httpStatus = HttpStatus.I_AM_A_TEAPOT;
+		}
 		
 		_log.info("-----> creating user record result: " + httpStatus);
 		
-		return new ResponseEntity<Integer>( id, httpStatus );
+		return new ResponseEntity<String>( generatedPassword, httpStatus );
 	}
 	
 	@PostMapping( "/users/authenticate" )
@@ -166,4 +211,6 @@ public class UserLoginController
 		
 		return new ResponseEntity<String>( "", HttpStatus.OK );
 	}
+	
+	/****************************************** SPECIAL CASES *************************************************/
 }

@@ -10,7 +10,6 @@ import javax.persistence.criteria.Root;
 import org.apache.log4j.Logger;
 import org.gs.medapp.dao.UserLoginDAO;
 import org.gs.medapp.model.UserLogin;
-import org.gs.medapp.service.UserLoginService;
 import org.gs.medapp.util.HibernateUtils;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -20,7 +19,7 @@ import org.springframework.stereotype.Component;
 public class UserLoginDAOImpl implements UserLoginDAO
 {
 	// logger
-		private final Logger _log = Logger.getLogger( UserLoginDAOImpl.class );
+	private final Logger _log = Logger.getLogger( UserLoginDAOImpl.class );
 	
 	// get hibernate session factory
 	SessionFactory sessionFactory = HibernateUtils.getSessionfactory();

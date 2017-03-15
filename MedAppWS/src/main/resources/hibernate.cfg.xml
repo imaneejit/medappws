@@ -38,6 +38,7 @@
 		<!-- mappings -->
 		<mapping class="org.gs.medapp.model.UserDetail" />
 		<mapping class="org.gs.medapp.model.UserLogin" />
+		<mapping class="org.gs.medapp.model.UserDoctorDetail" />
 
 	</session-factory>
 

@@ -1,10 +1,9 @@
 package org.gs.medapp.service;
 
-import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 import org.apache.log4j.Logger;
-import org.gs.medapp.controller.UserLoginController;
 import org.gs.medapp.dao.UserLoginDAO;
 import org.gs.medapp.enums.UserStatus;
 import org.gs.medapp.model.UserLogin;
@@ -12,8 +11,6 @@ import org.gs.medapp.security.JwtAuthenticationToken;
 import org.gs.medapp.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCrypt;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -47,35 +44,29 @@ public class UserLoginService
 	}
 	
 	// create user
-	public Integer createUser( UserLogin user )
+	public void createUser( UserLogin user )
 	{
-		Integer id = null;
-		
+		String generatedPassword = null;
+				
 		// check if username is already used
 		UserLogin fetchUser = userLoginDAO.get(user.getUsername());
 		if ( null == fetchUser )
 		{
-			user.setCreatedDate(new Date());
-			user.setUpdatedDate(new Date());
-			user.setCreatedBy("TO DO");
-			user.setUpdatedBy("TO DO");
-			user.setUpdatedProgram("UserDetailsService.createUser");
+			user.setUsername(user.getUsername());
+			user.setRole(user.getRole());
+			user.setStatus(UserStatus.INITIAL.getNum());
+
+			// password generator
+			String uuid = UUID.randomUUID().toString();
+			generatedPassword = uuid.substring(0, 8);
+			user.setPassword(generatedPassword);
 			
-			user.setStatus(UserStatus.ACTIVE.getNum());
-			
-			// set encrypted password
-			PasswordEncoder encoder = new BCryptPasswordEncoder();
-			user.setPassword(encoder.encode("default123"));
-			
-			id = userLoginDAO.create(user);
+			userLoginDAO.create(user);
 		}
 		else
 		{
-			_log.error("Username is already taken!");
-			id = -1;
+			_log.error("-----> Username is already taken!");
 		}
-		
-		return id;
 	}
 	
 	// authenticate user
@@ -108,10 +99,6 @@ public class UserLoginService
 	// update user
 	public void updateUser( UserLogin user )
 	{
-		user.setUpdatedDate(new Date());
-		user.setUpdatedBy("TO DO");
-		user.setUpdatedProgram("UserDetailsService.updateUser");
-		
 		userLoginDAO.update(user);
 	}
 	

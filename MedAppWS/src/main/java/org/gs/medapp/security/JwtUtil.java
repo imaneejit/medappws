@@ -60,7 +60,6 @@ public class JwtUtil
 					user.setUsername( body.getSubject() );
 					user.setId((Integer) body.get("id"));
 					user.setRole((Integer) body.get("role"));
-					user.setUserDetails((Integer) body.get("userdetails"));
 				}
 			}
 		} 
@@ -92,7 +91,6 @@ public class JwtUtil
 		Claims claims = Jwts.claims().setSubject(user.getUsername());
 		claims.put("id", user.getId());
 		claims.put("role", user.getRole());
-		claims.put("userdetails", user.getUserDetails());
 		
 		// add expiration in claims
 		Integer expirationHour = Integer.parseInt(appProps.getProperty(Constants._STR_JWT_EXPIRATION_HOUR));
