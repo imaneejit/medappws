@@ -1,5 +1,6 @@
 package org.gs.medapp.security;
 
+import org.gs.medapp.model.UserLogin;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 
 public class JwtAuthenticationToken extends UsernamePasswordAuthenticationToken 
@@ -10,11 +11,13 @@ public class JwtAuthenticationToken extends UsernamePasswordAuthenticationToken
 	private static final long serialVersionUID = 8521130873875991231L;
 	
 	private String token;
+	private UserLogin user;
 	
-	public JwtAuthenticationToken( String token )
+	public JwtAuthenticationToken( String token, UserLogin user )
 	{
 		super(null, null);
 		this.token = token;
+		this.user = user;
 	}
 
 	public String getToken()
@@ -31,6 +34,6 @@ public class JwtAuthenticationToken extends UsernamePasswordAuthenticationToken
 	@Override
     public Object getPrincipal() 
 	{
-        return null;
+        return user;
     }
 }

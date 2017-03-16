@@ -3,6 +3,7 @@ package org.gs.medapp.controller;
 import java.util.List;
 
 import org.apache.log4j.Logger;
+import org.gs.medapp.dto.ChangePasswordDTO;
 import org.gs.medapp.dto.UserCreationDTO;
 import org.gs.medapp.model.UserDoctorDetail;
 import org.gs.medapp.model.UserLogin;
@@ -105,8 +106,8 @@ public class UserLoginController
 	 * <br>
 	 * insert user record
 	 * 
-	 * @param	user		UserLogin object JSON
-	 * @return 	id			generated id
+	 * @param	UserCreationDTO		data transfer object for user creation		
+	 * @return 	generatedPassword	generated password
 	 */
 	@PostMapping( "/users" )
 	public ResponseEntity<String> addUser( @RequestBody UserCreationDTO userCreationDTO )
@@ -212,5 +213,31 @@ public class UserLoginController
 		return new ResponseEntity<String>( "", HttpStatus.OK );
 	}
 	
-	/****************************************** SPECIAL CASES *************************************************/
+	/**
+	 * request type:	POST <br>
+	 * request url:		/users/changepass <br>
+	 * 
+	 * (1) facility for changing password <br>
+	 * (2) https status 200 for successful transaction; 418 otherwise
+	 * 
+	 * @param changePasswordDTO	data transfer object for change password
+	 * @return empty			empty string
+	 */
+	@PostMapping( "/users/changepass" )
+	public ResponseEntity<String> changePassword( @RequestBody ChangePasswordDTO changePasswordDTO )
+	{
+		_log.info("-----> changing password for user: " + changePasswordDTO.getUsername());
+		
+		HttpStatus httpStatus = null;
+		
+		boolean result = userLoginService.changePassword( changePasswordDTO.getUsername(), 
+															changePasswordDTO.getOldPassword(), 
+															changePasswordDTO.getNewPassword());
+		
+		httpStatus = result ? HttpStatus.OK : HttpStatus.I_AM_A_TEAPOT;
+		
+		_log.info("-----> change password result: " + httpStatus);
+		
+		return new ResponseEntity<String>( "", httpStatus );
+	}
 }

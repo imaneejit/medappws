@@ -38,7 +38,7 @@ public class JwtAuthenticationFilter extends AbstractAuthenticationProcessingFil
 
 		String authToken = header.substring(7);
 
-		JwtAuthenticationToken authRequest = new JwtAuthenticationToken(authToken);
+		JwtAuthenticationToken authRequest = new JwtAuthenticationToken(authToken, null);
 
 		return getAuthenticationManager().authenticate(authRequest);
 	}

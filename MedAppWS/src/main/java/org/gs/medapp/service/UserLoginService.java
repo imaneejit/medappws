@@ -11,6 +11,8 @@ import org.gs.medapp.security.JwtAuthenticationToken;
 import org.gs.medapp.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCrypt;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -81,15 +83,31 @@ public class UserLoginService
 		}
 		else
 		{
-			if ( BCrypt.checkpw(password, user.getPassword()) )
+			if ( user.getStatus() > 1 )
 			{
-				// generate token
-				String token = jwtUtil.generateToken(user);
-				jwtToken = new JwtAuthenticationToken(token);
+				if ( BCrypt.checkpw(password, user.getPassword()) )
+				{
+					// generate token
+					String token = jwtUtil.generateToken(user);
+					jwtToken = new JwtAuthenticationToken(token, user);
+				}
+				else
+				{
+					_log.error("-----> Credentials invalid!");
+				}
 			}
 			else
 			{
-				_log.error("-----> Credentials invalid!");
+				if ( password.equals( user.getPassword() ) )
+				{
+					// generate token
+					String token = jwtUtil.generateToken(user);
+					jwtToken = new JwtAuthenticationToken(token, user);
+				}
+				else
+				{
+					_log.error("-----> Credentials invalid!");
+				}
 			}
 		}
 		
@@ -106,5 +124,55 @@ public class UserLoginService
 	public void deleteUser( Integer id )
 	{
 		userLoginDAO.delete(id);
+	}
+	
+	public boolean changePassword( String username, String oldPassword, String newPassword )
+	{
+		boolean result = true;
+		
+		// fetch the user
+		UserLogin user = userLoginDAO.get(username);
+		if ( null != user )
+		{
+			PasswordEncoder encoder = new BCryptPasswordEncoder();
+			
+			// using encryption depends on status
+			if ( user.getStatus() > 1 )
+			{
+				// old user
+				if ( BCrypt.checkpw(oldPassword, user.getPassword()) )
+				{
+					user.setPassword(encoder.encode(newPassword));
+					userLoginDAO.update(user);
+				}
+				else
+				{
+					_log.error("-----> old password incorrect!");
+					result = false;
+				}
+			}
+			else
+			{
+				// new user
+				if ( user.getPassword().equals(oldPassword) )
+				{
+					user.setPassword(encoder.encode(newPassword));
+					user.setStatus(UserStatus.STEP2.getNum());
+					userLoginDAO.update(user);
+				}
+				else
+				{
+					_log.error("-----> old password incorrect!");
+					result = false;
+				}
+			}
+		}
+		else
+		{
+			_log.error("-----> User not found! Unable to change password!");
+			result = false;
+		}
+		
+		return result;
 	}
 }
